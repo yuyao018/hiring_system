@@ -1,5 +1,6 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+let signupError = null;
 let server, base, signupOptions, insertedApplication, createdJob, requestedOwner, signedPath;
 const users = {
  applicant: { id: 'applicant-id', email: 'applicant@example.com', name: 'Applicant', role: 'applicant' },
@@ -51,7 +52,7 @@ function fakeClient(token, admin = false) {
     const jwt = refresh_token.replace('refresh-', '');
     return users[jwt] && !revoked.has(jwt) ? { data: { session: session(jwt) } } : { error: true };
    },
-   signUp: async options => { signupOptions = options; return { data: { session: null }, error: null }; },
+   signUp: async options => { signupOptions = options; return { data: { session: null }, error: signupError }; },
    admin: { signOut: async jwt => { revoked.add(jwt); return { error: null }; } }
   }
  };
@@ -103,6 +104,20 @@ test('signup ignores forged hiring-manager role and supports email confirmation'
  const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'long-password', role: 'hiring_manager' }));
  assert.equal(response.status, 201); assert.equal((await response.json()).needsConfirmation, true);
  assert.deepEqual(signupOptions.options.data, { name: 'New applicant' });
+});
+test('registration explains duplicate accounts, rate limits and database failures', async () => {
+ try {
+  for (const [code,status,expected] of [
+   ['user_already_exists',422,'already exists'],
+   ['over_request_rate_limit',429,'Too many attempts'],
+   ['unexpected_failure',500,'could not save your account']
+  ]) {
+   signupError = { code, status };
+   const response = await fetch(base + '/api/auth/register', json({ name: 'Applicant', email: 'new@example.com', password: 'long-password' }));
+   assert.equal(response.status, status === 429 ? 429 : 400);
+   const data = await response.json(); assert.equal(data.code, code); assert.ok(data.message.includes(expected));
+  }
+ } finally { signupError = null; }
 });
 test('applicant cannot access manager reads, writes or resumes', async () => {
  for (const [route, method] of [['/jobs','GET'],['/jobs','POST'],['/applicants','POST'],['/updateStatus/job','PUT'],['/updateApplicantStatus/id','PUT'],['/resume/id','GET']]) {

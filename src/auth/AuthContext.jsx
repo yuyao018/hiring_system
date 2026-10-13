@@ -1,3 +1,4 @@
+import { readJson } from './api';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 const AuthContext = createContext(null);
 export const dashboardFor = user => user?.role === 'hiring_manager' ? '/recruiter/dashboard' : '/applicant/dashboard';
@@ -7,7 +8,7 @@ export function AuthProvider({ children }) {
   try {
    const response = await fetch('/api/auth/session');
    if (response.status === 401) { setUser(null); setError(''); return null; }
-   const data = await response.json();
+   const data = await readJson(response);
    if (!response.ok) throw new Error(data.message || 'Unable to check your account');
    setUser(data.user); setError(''); return data.user;
   } catch (err) { setUser(null); setError(err.message); throw err; }

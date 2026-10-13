@@ -1,3 +1,4 @@
+import { readJson } from './api';
 import React, { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { dashboardFor, useAuth } from './AuthContext';
@@ -13,7 +14,7 @@ export default function Login() {
   event.preventDefault(); setBusy(true); setMessage('');
   try {
    const response = await fetch(`/api/auth/${register ? 'register' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
-   const data = await response.json();
+   const data = await readJson(response);
    if (!response.ok) throw new Error(data.message || 'Unable to sign in');
    if (data.needsConfirmation) { setMessage(data.message); setRegister(false); setPassword(''); return; }
    const current = await refresh();
