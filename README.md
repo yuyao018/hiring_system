@@ -47,3 +47,9 @@ This refactor does not automatically move existing PostgreSQL records or passwor
 - `npm run test:integration`: role, ownership, session and API tests with an in-process Supabase double; no cloud credentials needed.
 
 The `/api/health` endpoint checks server liveness, not Supabase connectivity. For live verification, create one applicant and one manager, publish a job, submit a resume, confirm that only its owner sees the application, then shortlist it as the manager and verify the updated applicant status. Try each role's forbidden API and dashboard paths. Cloud connectivity, SQL policies and Storage must also be checked against your configured Supabase project; mocked tests do not establish deployed policy behavior.
+
+## Confirmation link opens an unreachable localhost page
+
+Keep `npm run dev` running while opening confirmation emails on this computer. The website runs on port 3000, independently of the API's `PORT=5000`. `FRONTEND_PORT` can override the frontend port; if changed, update Supabase Authentication > URL Configuration to match. For the default local setup use Site URL `http://localhost:3000` and allow redirects to `http://localhost:3000/**`.
+
+If email verification redirects to an unavailable page, verification may already have succeeded. Start the app and try logging in at `http://localhost:3000/login`. A localhost link only works on the computer running the app. For other devices or a deployed website, configure the corresponding reachable site URL in Supabase.
