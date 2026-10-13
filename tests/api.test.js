@@ -73,6 +73,23 @@ test('public jobs remain available, private APIs reject signed-out users', async
  for (const route of ['/api/auth/session','/api/careers/applications','/api/recruiter/jobs','/api/recruiter/resume/id']) assert.equal((await fetch(base + route)).status, 401);
  assert.equal((await fetch(base + '/api/careers/applicants', { method: 'POST' })).status, 401);
 });
+test('guests cannot use any application or hiring action, even with invalid credentials', async () => {
+ const routes = [
+  ['POST','/api/careers/applicants'], ['POST','/api/recruiter/jobs'],
+  ['POST','/api/recruiter/applicants'], ['PUT','/api/recruiter/updateJob/job'],
+  ['PUT','/api/recruiter/updateStatus/job'], ['PUT','/api/recruiter/updateApplicantStatus/id'],
+  ['GET','/api/recruiter/allJobs'], ['GET','/api/recruiter/editJob/job'],
+  ['POST','/api/careers/jobs'], ['DELETE','/api/careers/jobs'],
+  ['POST','/api/future-feature']
+ ];
+ for (const [method, route] of routes) {
+  for (const headers of [{}, { cookie: 'high5_access=invalid; high5_refresh=invalid' }]) {
+   const response = await fetch(base + route, { method, headers });
+   assert.equal(response.status, 401, `${method} ${route} should require login`);
+  }
+ }
+ assert.equal((await fetch(base + '/api/careers/jobs', { method: 'HEAD' })).status, 200);
+});
 test('one login serves both roles, session derives role from trusted profile', async () => {
  for (const [token, user] of Object.entries(users)) {
   const login = await fetch(base + '/api/auth/login', json({ email: user.email, password: 'valid-password', role: 'forged-role' }));

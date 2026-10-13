@@ -7,6 +7,11 @@ const app = express();
 app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./auth-api'));
+// Only authentication and published job browsing are public. New APIs are private by default.
+app.use('/api', (req, res, next) => {
+ if (['GET', 'HEAD'].includes(req.method) && req.path === '/careers/jobs') return next();
+ return require('./session').requireUser(req, res, next);
+});
 app.use('/api/careers', require('./careers-api'));
 app.use('/api/recruiter', require('./recruiter-api'));
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));

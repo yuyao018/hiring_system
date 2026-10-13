@@ -1,3 +1,4 @@
+import { dashboardFor, useAuth } from '../auth/AuthContext';
 import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar/Navbar'
 import Card from './components/Card/Card'
@@ -7,6 +8,7 @@ import axios from 'axios'
 const Careers = () => {
   const [selectedJob, setSelectedJob] = useState(null)
   const navigate = useNavigate()
+  const { user, loading } = useAuth();
 
   const [jobs, setJobs] = useState([]);
 
@@ -55,8 +57,12 @@ const Careers = () => {
                 <div className='jobTitleRow'>
                   <div className='jobName'><h1>{selectedJob.job}</h1></div>
                   <div>
-                    <button className='applyBtn' onClick={() => navigate('/Apply', {state: {job: selectedJob}})}>
-                      Apply now
+                    <button className='applyBtn' disabled={loading} onClick={() => {
+                      if (!user) navigate('/login', { state: { from: { pathname: '/apply', state: { job: selectedJob } } } });
+                      else if (user.role === 'applicant') navigate('/apply', { state: { job: selectedJob } });
+                      else navigate(dashboardFor(user));
+                    }}>
+                      {loading ? 'Checking account...' : !user ? 'Sign in to apply' : user.role === 'applicant' ? 'Apply now' : 'Hiring dashboard'}
                     </button>
                   </div>
                 </div>

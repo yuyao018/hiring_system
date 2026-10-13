@@ -11,6 +11,7 @@ function clearSession(res) {
  res.clearCookie('high5_access', cookieOptions); res.clearCookie('high5_refresh', cookieOptions);
 }
 async function requireUser(req, res, next) {
+ if (req.user && req.db) return next();
  try {
   const saved = cookies(req);
   if (!saved.high5_access && !saved.high5_refresh) return res.status(401).json({ message: 'Please log in' });

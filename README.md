@@ -1,6 +1,6 @@
 # High5 recruitment system — Supabase edition
 
-Applicants and hiring managers share `/login`. Supabase Auth verifies their credentials, and a protected `profiles` record determines their role. Applicants land on `/applicant/dashboard` and see only their own applications. Hiring managers land on `/recruiter/dashboard` to manage jobs and review applicants. Public job browsing remains at `/`; submitting an application requires an applicant account.
+Applicants and hiring managers share `/login`. Supabase Auth verifies their credentials, and a protected `profiles` record determines their role. Applicants land on `/applicant/dashboard` and see only their own applications. Hiring managers land on `/recruiter/dashboard` to manage jobs and review applicants. Signed-out visitors have read-only access to published job listings at `/`. Applying prompts sign-in and resumes the selected application afterward. All feature APIs are private by default, apart from published job browsing and the login/registration endpoints. Role restrictions still apply after sign-in.
 
 ## Set up Supabase
 
