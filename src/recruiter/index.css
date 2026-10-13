@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap'); .recruiter *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+} .recruiter a{
+    text-decoration: none;
+} .recruiter .loginContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f4f4f4;
+} .recruiter .form{
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    width: 300px;
+} .recruiter .title{
+    text-align: center;
+    margin-bottom: 1.5rem;
+} .recruiter .inputGroup{
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+} .recruiter .input{
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 5px;
+} .recruiter .loginBtn{
+    display: flex;
+    justify-content: center;
+} .recruiter .toast{
+    position: fixed;
+    top: 20px; /* distance from top */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 1000;
+    animation: fadeOut 3s forwards; /* auto fade */
+}
+
+@keyframes fadeout {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}

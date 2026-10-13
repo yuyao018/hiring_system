@@ -1,0 +1,42 @@
+ .recruiter .header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 14px 54px;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+} .recruiter .logo{
+    font-size: 30px;
+    color: #000000;
+    font-weight: 700;
+} .recruiter .logo:hover{
+    color: #0d389d;
+} .recruiter .navbar a{
+    position: relative;
+    font-size: 18px;
+    color: #000000;
+    font-weight: 500;
+    margin-left: 40px;
+} .recruiter .navbar a:hover{
+    color: #0d389d;
+} .recruiter .navbar a::before{
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #0d389d;
+    transition: .2s;
+} .recruiter .navbar a:hover::before{
+    width: 100%;
+} .recruiter .portal{
+    font-weight: 400;
+}
+.recruiter .navbar button { margin-left: 24px; padding: 8px 14px; border: 1px solid #173e8b; border-radius: 6px; background: white; color: #173e8b; cursor: pointer; }

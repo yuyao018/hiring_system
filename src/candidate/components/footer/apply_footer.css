@@ -1,0 +1,23 @@
+ .candidate .footerContainer{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 10%;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #ddd;
+    align-items: center;
+    z-index: 100;
+} .candidate .cancelBtn, .candidate .clearBtn, .candidate .submitBtn{
+    font-size: 12px;
+    padding: 8px 20px;
+    border-radius: 5px;
+    border: 2px solid #63C8FF;
+    background-color: transparent;
+    margin: 0px 8px;
+} .candidate .cancelBtn:hover, .candidate .clearBtn:hover, .candidate .submitBtn:hover{
+    background-color: #c6e9f9;
+    cursor: pointer;
+}

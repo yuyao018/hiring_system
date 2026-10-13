@@ -1,0 +1,126 @@
+ .recruiter *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+} .recruiter a{
+    text-decoration: none;
+} .recruiter .headerContainer{
+    margin-top: 100px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+} .recruiter .dashboardTitle{
+    padding-left: 16px;
+} .recruiter .jobBtnGroup{
+    display: flex;
+} .recruiter .createJob, .recruiter .manageJob{
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px 16px;
+    margin-right: 16px;
+    color: black;
+} .recruiter .resumeContainer{
+    display: flex;
+    gap: 12px;
+    width: 75%;
+    margin: 0 auto 30px auto;
+} .recruiter .list{
+    width: 25%;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-left: 12px;
+    min-height: 515px;
+    max-height: 900px;
+    padding: 20px;
+} .recruiter .recruiterTools{
+    display: flex;
+    gap: 30px;
+    margin: 20px 16px;
+    justify-content: end;
+} .recruiter .cardsWrapper{
+    max-height: 795px;
+    overflow-y: auto;
+    margin-top: 10px;
+} .recruiter .detail{
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-right: 12px;
+    min-height: 500px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+} .recruiter .circular{
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(
+        from 0deg,
+        #AE00FB 0%,
+        #3E00FF calc(var(--value) * 1%),
+        #e6e6e6 0
+    );
+    position: relative;
+    margin: auto;
+} .recruiter .circular::before{
+    content: '';
+    position: absolute;
+    inset: 10px;
+    background: #fff;
+    border-radius: 50%;
+} .recruiter .circular > span{
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+} .recruiter .resultContainer{
+    display: grid;
+    grid-template-columns: 1fr 3fr; /* score/personality | resume */
+    gap: 20px;
+    align-items: start;
+    padding-top: 20px;
+} .recruiter .col2{
+    width: 100%;
+} .recruiter .buttonGroup{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    justify-content: end;
+} .recruiter .applicantInfo{
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+} .recruiter .applicantInfo-grid1{
+    text-align: start;
+} .recruiter .applicantInfo-grid2{
+    text-align: end;
+} .recruiter .contactInfo-section{
+    margin-top: 30px;
+} .recruiter .score-section{
+    margin-bottom: 40px;
+} .recruiter .resumeDownload{
+    display: grid;
+    grid-template-columns: 5fr 1fr;
+    border: 3px dashed #ddd;
+    border-radius: 10px;
+    padding: 10px;
+} .recruiter .resumeDownload-p{
+    padding: 8px;
+} .recruiter .applicantInfo-status{
+    font-size: 12px;
+    font-weight: 400;
+    padding: 2px 8px;
+    color: white;
+    border: none;
+    border-radius: 15px;
+} .recruiter .applicantInfo-status.Shortlisted{
+    background-color: green;
+} .recruiter .applicantInfo-status.Rejected{
+    background-color: red;
+} .recruiter .applicantInfo-status.Reviewing{
+    background-color: orange;
+}

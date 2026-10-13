@@ -1,0 +1,42 @@
+ .candidate .stepper-container{
+    display: flex;
+    flex-direction: column; /* vertical layout */
+    align-items: flex-start;
+    position: relative;
+    margin-top: 50px;
+    margin-left: 100px;
+} .candidate .step{
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-bottom: 100px;
+} .candidate .circle{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    cursor: pointer;
+    z-index: 1;
+} .candidate .circle.active{
+    background: #4caf50;
+    border: 3px solid #287729;
+    color: white;
+} .candidate .label{
+    margin-left: 10px;
+    color: #334155;
+} .candidate .label-active{
+    font-weight: 700;
+    color: #0f172a;
+} .candidate .line{
+    position: absolute;
+    left: 14px; /* aligns with circle center */
+    top: 30px;
+    width: 2px;
+    height: 100px;
+    background: #ccc;
+    z-index: 0;
+}

@@ -1,0 +1,21 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const fs = require('fs');
+fs.mkdirSync(path.join(__dirname, 'uploads/temp'), { recursive: true });
+const express = require('express');
+const app = express();
+app.use(express.json());
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.use('/api/auth', require('./auth-api'));
+app.use('/api/careers', require('./careers-api'));
+app.use('/api/recruiter', require('./recruiter-api'));
+app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
+app.use(express.static(path.join(__dirname, 'build')));
+app.get('/{*path}', (req, res) => res.sendFile(path.join(__dirname, 'build/index.html')));
+app.use((err, req, res, next) => {
+ console.error(err.message);
+ const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : (err.status || 500);
+ res.status(status).json({ message: status < 500 || status === 503 ? (status === 413 ? 'Resume must be under 10 MB' : err.message) : 'Request failed. Please try again.' });
+});
+if (require.main === module) app.listen(process.env.PORT || 5000, () => console.log('High5 running on port ' + (process.env.PORT || 5000)));
+module.exports = app;

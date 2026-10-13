@@ -1,0 +1,8 @@
+ .recruiter label{
+    margin-right: 8px;
+} .recruiter select{
+    padding: 6px 16px;
+    border-radius: 5px;
+} .recruiter select:hover{
+    cursor: pointer;
+}
