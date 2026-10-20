@@ -10,4 +10,10 @@ Use a new Supabase project and retain a backup of the old PostgreSQL database an
 6. Upload each resume to the private `resumes` bucket as `<user_id>/<applicant_id>.<extension>`, then update that application's `resume` to the exact storage object path. Do not import local filesystem paths as resume URLs.
 7. Check record counts, job creators, application ownership, scores and downloads using both roles before switching users to the new deployment.
 
+## Soft deletion and audit history
+
+Run the updated `schema.sql` for existing installations as well as new ones. It adds nullable `deleted_at` fields to profiles, jobs and applications, and creates `public.audit_log`. Normal public and recruiter queries exclude soft-deleted records. The recruiter API supports `DELETE /api/recruiter/jobs/:jobId`; it stamps `deleted_at` and `updated_at` rather than removing the row. Applications remain attached to a soft-deleted job for traceability.
+
+Database triggers record inserts, updates and physical deletes on `profiles`, `job` and `applicant`. Direct SQL deletes on jobs are intercepted and converted to soft deletion, which preserves linked applications and records the `deleted_at`/`updated_at` changes. Each audit row includes the table and record ID, actor UUID when available, timestamp, full before/after snapshots, and a `changes` object keyed by changed column, with `old` and `new` values. Audit rows are not readable by anon/authenticated database roles; inspect them only through a trusted administrative connection. Avoid putting secrets in auditable business columns because snapshots retain their prior values.
+
 No records are migrated or deleted by the application or provisioning script. Do not grant applicants permission to modify profiles, application ownership or compatibility scores. If accounts already existed before the auth trigger was installed, create missing profile rows administratively with the correct account UUID and role before allowing login.

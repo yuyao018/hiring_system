@@ -18,6 +18,10 @@ router.put('/updateStatus/:jobId', async (req, res) => {
  const rows = await jobs.updateStatus(req.db, req.params.jobId, req.body.status);
  res.status(rows.length ? 200 : 404).json({ success: !!rows.length, job: rows[0] });
 });
+router.delete('/jobs/:jobId', async (req, res) => {
+ const result = await jobs.softDeleteJob(req.db, req.params.jobId);
+ res.status(result.success ? 200 : 404).json(result);
+});
 router.post('/jobs', async (req, res) => res.json({ success: true, job: await jobs.createJob(req.db, { ...req.body, created_by: req.user.id }) }));
 router.post('/applicants', async (req, res) => res.json({ success: true, applicants: await applicants.getApplicants(req.db) }));
 router.put('/updateApplicantStatus/:applicantId', async (req, res) => {
