@@ -5,6 +5,7 @@ body { margin: 0; }
 .auth-card h1 { font-size: 26px; color: #142b50; margin-top: 0; }
 .auth-card p { color: #52627a; line-height: 1.5; }
 .auth-card label { display: block; margin: 20px 0; font-size: 14px; }
+.auth-card .character-count { display: block; margin-top: 5px; color: #66758b; font-size: 12px; text-align: right; }
 .auth-card input { display: block; width: 100%; box-sizing: border-box; margin-top: 8px; border: 1px solid #b7c4d8; border-radius: 6px; padding: 12px; font: inherit; }
 .auth-card button { width: 100%; padding: 12px; background: #173e8b; color: white; border: 0; border-radius: 6px; cursor: pointer; font: inherit; }
 .auth-card button:disabled { opacity: .6; cursor: wait; }

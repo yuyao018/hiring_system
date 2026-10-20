@@ -12,6 +12,7 @@ import './Dashboard.css'
 const Dashboard = () => {
     const [jobs, setJobs] = useState([]);
     const [applicants, setApplicants] = useState([]);
+    const [applicationError, setApplicationError] = useState('');
     const [selectedApplicantIndex, setSelectedApplicantIndex] = useState(null);
     const [animatedPercent, setAnimatedPercent] = useState(0);
     const applicationStatus = ["Reviewing", "Shortlisted", "Rejected"];
@@ -46,13 +47,14 @@ const Dashboard = () => {
                 });
                 const data = await res.json();
 
-                if (data.success) {
+                if (res.ok && data.success) {
                     setApplicants(data.applicants);
                 } else {
-                    console.error("Failed to fetch applicants");
+                    setApplicationError("Unable to load applications right now. Please try again later.");
                 }
             } catch (error) {
                 console.error("Error fetching applicants:", error);
+                setApplicationError("Unable to load applications right now. Please try again later.");
             }
         };
 
@@ -113,17 +115,19 @@ const Dashboard = () => {
                 body: JSON.stringify({ status })
             });
             const data = await response.json();
-            if (data.success) {
+            if (response.ok && data.success) {
                 setApplicants(prev =>
                     prev.map(applicant =>
                         applicant.applicant_id === applicantId ? { ...applicant, status } : applicant
                     )
                 );
+                setApplicationError('');
             } else {
-                console.error("Failed to update applicant status:", data.message);
+                setApplicationError("Unable to update this application. Please try again.");
             }
         } catch(error) {
             console.error("Error updating applicant status:", error);
+            setApplicationError("Unable to update this application. Please try again.");
         }
     };
 
@@ -135,8 +139,9 @@ const Dashboard = () => {
             if (!response.ok || !data.success) throw new Error(data.message || "Unable to delete this application");
             setApplicants(prev => prev.filter(item => item.applicant_id !== applicant.applicant_id));
             setSelectedApplicantIndex(null);
+            setApplicationError('');
         } catch (error) {
-            window.alert(error.message || "Unable to delete this application");
+            setApplicationError("Unable to delete this application. Please try again.");
         }
     };
 
@@ -156,6 +161,7 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+            {applicationError && <p role="alert" className="applicationError">{applicationError}</p>}
             <div className='recruiterTools'>
                 <div className='jobs'>
                     <Selection

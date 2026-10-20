@@ -61,6 +61,10 @@
 } .candidate .resumeDesc{
     padding-top: 15px;
     font-size: 15px;
+} .candidate .resumeError{
+    margin: 10px 0 0;
+    color: #b42318;
+    font-size: 14px;
 } .candidate .col{
     display: flex;
     flex-direction: row;
@@ -81,6 +85,12 @@
     width: 100%;
 } .candidate .phoneInputBox{
     margin-top: 10px;
+} .candidate .character-count{
+    display: block;
+    margin-top: 4px;
+    color: #667085;
+    font-size: 12px;
+    text-align: right;
 } .candidate /* inline form actions at the end of the page */
 .formActions{
     display: flex;
@@ -104,6 +114,21 @@
 } .candidate .submitBtn:disabled{
     opacity: 0.5;
     cursor: not-allowed;
+} .candidate .formActionsRight{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 360px;
+} .candidate .submitBlockers, .candidate .submitReady{
+    margin: 10px 8px 0;
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.45;
+} .candidate .submitBlockers ul{
+    margin: 4px 0 0;
+    padding-left: 20px;
+} .candidate .submitBlockers li{
+    margin: 2px 0;
 } .candidate .section{
     scroll-margin-top: 100px;
 }

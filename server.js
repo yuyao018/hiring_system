@@ -22,9 +22,21 @@ app.use('/api', (req, res) => res.status(404).json({ message: 'API route not fou
 app.use(express.static(path.join(__dirname, 'build')));
 app.get('/{*path}', (req, res) => res.sendFile(path.join(__dirname, 'build/index.html')));
 app.use((err, req, res, next) => {
- console.error(err.message);
+ console.error('Request failed:', err);
  const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : (err.status || 500);
- res.status(status).json({ message: status < 500 || status === 503 ? (status === 413 ? 'Resume must be under 10 MB' : err.message) : 'Request failed. Please try again.' });
+ const genericMessages = {
+  400: 'Please check your request and try again.',
+  401: 'Please log in again.',
+  403: 'You do not have permission to do that.',
+  404: 'The requested item could not be found.',
+  409: 'This request conflicts with existing information.',
+  413: 'Resume must be under 10 MB.',
+  429: 'Too many requests. Please wait and try again.',
+  503: 'The service is temporarily unavailable. Please try again later.'
+ };
+ res.status(status >= 400 && status < 600 ? status : 500).json({
+  message: err.publicMessage || genericMessages[status] || 'Something went wrong. Please try again.'
+ });
 });
 if (require.main === module) app.listen(process.env.PORT || 5000, () => console.log('High5 running on port ' + (process.env.PORT || 5000)));
 module.exports = app;

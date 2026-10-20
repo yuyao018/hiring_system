@@ -1,4 +1,6 @@
-const { PASSWORD_REQUIREMENTS, isValidPassword, getPasswordIssues } = require('./src/auth/passwordPolicy');
+const { PASSWORD_REQUIREMENTS, PASSWORD_MAX_LENGTH, isValidPassword, getPasswordIssues } = require('./src/auth/passwordPolicy');
+const { isValidEmail } = require('./src/auth/emailPolicy');
+const INPUT_LIMITS = require('./src/auth/inputLimits');
 const router = require('express').Router();
 const { publicClient } = require('./lib/supabase');
 const { requireUser, setSession, clearSession, cookies } = require('./session');
@@ -29,7 +31,9 @@ router.post('/login', ipLimiter, (req, res, next) => {
 });
 router.post('/register', async (req, res) => {
  const { name, email, password } = req.body;
- if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) return res.status(400).json({ message: 'Enter your name and email address' });
+ if (typeof name !== 'string' || !name.trim()) return res.status(400).json({ message: 'Enter your name.' });
+ if (name.trim().length > INPUT_LIMITS.name) return res.status(400).json({ message: `Your name must be ${INPUT_LIMITS.name} characters or fewer.` });
+ if (!isValidEmail(email)) return res.status(400).json({ message: 'Enter a valid email address.' });
  if (!isValidPassword(password)) return res.status(400).json({ code: 'weak_password', message: PASSWORD_REQUIREMENTS, issues: getPasswordIssues(password) });
  // Role is assigned by the database trigger, never by signup metadata.
  const { data, error } = await publicClient().auth.signUp({ email: email.trim(), password, options: { data: { name: name.trim() } } });
@@ -39,15 +43,17 @@ router.post('/register', async (req, res) => {
    email_exists: 'An account with this email already exists. Please log in instead.',
    weak_password: PASSWORD_REQUIREMENTS,
    email_address_invalid: 'Enter a valid email address.',
-   signup_disabled: 'Registration is disabled in Supabase. Enable new user signups in Authentication settings.',
-   email_provider_disabled: 'Email and password registration is disabled in Supabase.',
+   signup_disabled: 'Unable to create an account right now. Please try again later.',
+   email_provider_disabled: 'Unable to create an account right now. Please try again later.',
    over_email_send_rate_limit: 'Too many confirmation emails were requested. Please wait before trying again.',
    over_request_rate_limit: 'Too many attempts. Please wait before trying again.',
-   captcha_failed: 'Supabase requires CAPTCHA verification. Configure CAPTCHA support before registering.',
-   unexpected_failure: 'Supabase could not save your account. Check the Authentication logs and user-profile database trigger.'
+   captcha_failed: 'Unable to verify this registration. Please try again.',
+   unexpected_failure: 'Registration failed. Please try again later.'
   };
   console.error('Registration rejected:', error.code || 'unknown', 'status:', error.status || 'unknown');
-  return res.status(error.status === 429 ? 429 : 400).json({ code: error.code || 'registration_failed', message: messages[error.code] || 'Registration failed. Please try again or contact the administrator.' });
+  const publicCodes = new Set(['user_already_exists','email_exists','weak_password','email_address_invalid','signup_disabled','email_provider_disabled','over_email_send_rate_limit','over_request_rate_limit','captcha_failed']);
+  const publicCode = publicCodes.has(error.code) ? error.code : 'registration_failed';
+  return res.status(error.status === 429 ? 429 : 400).json({ code: publicCode, message: messages[error.code] || 'Registration failed. Please try again or contact the administrator.' });
  }
  if (data.session) setSession(res, data.session);
  res.status(201).json({ success: true, needsConfirmation: !data.session, message: data.session ? 'Account created' : 'Check your email to confirm your account, then log in.' });
