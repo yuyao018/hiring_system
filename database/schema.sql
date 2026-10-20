@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
  name TEXT NOT NULL,
  role TEXT NOT NULL DEFAULT 'applicant' CHECK (role IN ('applicant','hiring_manager')),
- deleted_at TIMESTAMPTZ
+ deleted_at TIMESTAMPTZ, is_deleted BOOLEAN NOT NULL DEFAULT false
 );
 CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.job (
  experience TEXT, education TEXT, requirement TEXT, description TEXT,
  status TEXT NOT NULL DEFAULT 'Draft' CHECK (status IN ('Active','Draft','Closed')),
  created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
- updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), deleted_at TIMESTAMPTZ
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), deleted_at TIMESTAMPTZ, is_deleted BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS public.applicant (
  applicant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -41,13 +41,19 @@ CREATE TABLE IF NOT EXISTS public.applicant (
  role_applied UUID NOT NULL REFERENCES public.job(job_id) ON DELETE CASCADE,
  personality_type TEXT, status TEXT NOT NULL DEFAULT 'Reviewing' CHECK (status IN ('Reviewing','Shortlisted','Rejected')),
  personality_test_score TEXT, compatibility_score INT CHECK (compatibility_score BETWEEN 0 AND 100), compatibility_breakdown TEXT,
- updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), deleted_at TIMESTAMPTZ,
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), deleted_at TIMESTAMPTZ, is_deleted BOOLEAN NOT NULL DEFAULT false,
  UNIQUE (user_id,role_applied)
 );
 -- Keep this script safe to reapply to installations created from earlier schema revisions.
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 ALTER TABLE public.job ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 ALTER TABLE public.applicant ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.job ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.applicant ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT false;
+UPDATE public.profiles SET is_deleted=(deleted_at IS NOT NULL) WHERE is_deleted IS DISTINCT FROM (deleted_at IS NOT NULL);
+UPDATE public.job SET is_deleted=(deleted_at IS NOT NULL) WHERE is_deleted IS DISTINCT FROM (deleted_at IS NOT NULL);
+UPDATE public.applicant SET is_deleted=(deleted_at IS NOT NULL) WHERE is_deleted IS DISTINCT FROM (deleted_at IS NOT NULL);
 -- Field-level change history. Values are JSON so the log works across all business tables.
 CREATE TABLE IF NOT EXISTS public.audit_log (
  audit_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -62,6 +68,28 @@ CREATE TABLE IF NOT EXISTS public.audit_log (
 );
 CREATE INDEX IF NOT EXISTS audit_log_record_idx ON public.audit_log(table_name, record_id, changed_at DESC);
 CREATE INDEX IF NOT EXISTS audit_log_actor_idx ON public.audit_log(changed_by, changed_at DESC);
+
+CREATE OR REPLACE FUNCTION public.sync_soft_delete_fields() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+ IF TG_OP = 'INSERT' THEN
+  NEW.is_deleted := COALESCE(NEW.is_deleted, false) OR NEW.deleted_at IS NOT NULL;
+  IF NEW.is_deleted AND NEW.deleted_at IS NULL THEN NEW.deleted_at := now(); END IF;
+ ELSIF NEW.is_deleted IS DISTINCT FROM OLD.is_deleted THEN
+  IF NEW.is_deleted THEN NEW.deleted_at := COALESCE(NEW.deleted_at, now());
+  ELSE NEW.deleted_at := NULL; END IF;
+ ELSIF NEW.deleted_at IS DISTINCT FROM OLD.deleted_at THEN
+  NEW.is_deleted := NEW.deleted_at IS NOT NULL;
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.sync_soft_delete_fields() FROM PUBLIC;
+DROP TRIGGER IF EXISTS profiles_sync_soft_delete ON public.profiles;
+CREATE TRIGGER profiles_sync_soft_delete BEFORE INSERT OR UPDATE OF is_deleted,deleted_at ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.sync_soft_delete_fields();
+DROP TRIGGER IF EXISTS job_sync_soft_delete ON public.job;
+CREATE TRIGGER job_sync_soft_delete BEFORE INSERT OR UPDATE OF is_deleted,deleted_at ON public.job FOR EACH ROW EXECUTE FUNCTION public.sync_soft_delete_fields();
+DROP TRIGGER IF EXISTS applicant_sync_soft_delete ON public.applicant;
+CREATE TRIGGER applicant_sync_soft_delete BEFORE INSERT OR UPDATE OF is_deleted,deleted_at ON public.applicant FOR EACH ROW EXECUTE FUNCTION public.sync_soft_delete_fields();
 
 CREATE OR REPLACE FUNCTION public.capture_audit_change() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
@@ -105,8 +133,8 @@ CREATE TRIGGER applicant_audit AFTER INSERT OR UPDATE OR DELETE ON public.applic
 CREATE OR REPLACE FUNCTION public.preserve_deleted_job() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
- IF OLD.deleted_at IS NULL THEN
-  UPDATE public.job SET deleted_at=now(), updated_at=now() WHERE job_id=OLD.job_id;
+ IF NOT OLD.is_deleted THEN
+  UPDATE public.job SET deleted_at=now(), is_deleted=true, updated_at=now() WHERE job_id=OLD.job_id;
  END IF;
  RETURN NULL;
 END $$;
@@ -122,24 +150,24 @@ REVOKE ALL ON public.profiles,public.job,public.applicant FROM anon,authenticate
 GRANT SELECT ON public.job TO anon;
 GRANT SELECT ON public.profiles,public.job,public.applicant TO authenticated;
 GRANT INSERT,UPDATE ON public.job TO authenticated;
-GRANT UPDATE(deleted_at,updated_at) ON public.job TO authenticated;
+GRANT UPDATE(deleted_at,is_deleted,updated_at) ON public.job TO authenticated;
 -- Managers can change status, but cannot change ownership, stored resumes or scores.
 GRANT UPDATE(status,updated_at) ON public.applicant TO authenticated;
 GRANT ALL ON public.profiles,public.job,public.applicant TO service_role;
 DROP POLICY IF EXISTS profiles_read ON public.profiles;
-CREATE POLICY profiles_read ON public.profiles FOR SELECT TO authenticated USING (id=auth.uid() AND deleted_at IS NULL);
+CREATE POLICY profiles_read ON public.profiles FOR SELECT TO authenticated USING (id=auth.uid() AND NOT is_deleted);
 DROP POLICY IF EXISTS jobs_public ON public.job;
-CREATE POLICY jobs_public ON public.job FOR SELECT TO anon USING (status='Active' AND deleted_at IS NULL);
+CREATE POLICY jobs_public ON public.job FOR SELECT TO anon USING (status='Active' AND NOT is_deleted);
 DROP POLICY IF EXISTS jobs_read ON public.job;
 CREATE POLICY jobs_read ON public.job FOR SELECT TO authenticated USING (
- deleted_at IS NULL AND (status='Active' OR public.is_hiring_manager() OR EXISTS (SELECT 1 FROM public.applicant WHERE role_applied=job_id AND user_id=auth.uid() AND deleted_at IS NULL))
+ NOT is_deleted AND (status='Active' OR public.is_hiring_manager() OR EXISTS (SELECT 1 FROM public.applicant WHERE role_applied=job_id AND user_id=auth.uid() AND NOT is_deleted))
 );
 DROP POLICY IF EXISTS jobs_insert ON public.job;
 CREATE POLICY jobs_insert ON public.job FOR INSERT TO authenticated WITH CHECK (public.is_hiring_manager() AND created_by=auth.uid());
 DROP POLICY IF EXISTS jobs_update ON public.job;
 CREATE POLICY jobs_update ON public.job FOR UPDATE TO authenticated USING (public.is_hiring_manager()) WITH CHECK (public.is_hiring_manager());
 DROP POLICY IF EXISTS applications_read ON public.applicant;
-CREATE POLICY applications_read ON public.applicant FOR SELECT TO authenticated USING (deleted_at IS NULL AND (user_id=auth.uid() OR public.is_hiring_manager()));
+CREATE POLICY applications_read ON public.applicant FOR SELECT TO authenticated USING (NOT is_deleted AND (user_id=auth.uid() OR public.is_hiring_manager()));
 DROP POLICY IF EXISTS applications_update ON public.applicant;
 CREATE POLICY applications_update ON public.applicant FOR UPDATE TO authenticated USING (public.is_hiring_manager()) WITH CHECK (public.is_hiring_manager());
 -- Applications and resume uploads are inserted only by the authenticated server handler,
