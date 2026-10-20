@@ -28,6 +28,10 @@ router.put('/updateApplicantStatus/:applicantId', async (req, res) => {
  const result = await applicants.updateApplicantStatus(req.db, req.params.applicantId, req.body.status);
  res.status(result.success ? 200 : 404).json(result);
 });
+router.delete('/applicants/:applicantId', async (req, res) => {
+ const result = await applicants.softDeleteApplicant(req.db, req.params.applicantId);
+ res.status(result.success ? 200 : 404).json(result);
+});
 router.get('/resume/:id', async (req, res) => {
  const row = unwrap(await req.db.from('applicant').select('resume').eq('applicant_id', req.params.id).maybeSingle());
  if (!row?.resume) return res.status(404).json({ message: 'Resume not found' });

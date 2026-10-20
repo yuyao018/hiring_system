@@ -85,6 +85,18 @@ const Managejob = () => {
         }
     };
 
+    const handleDeleteJob = async (job) => {
+        if (!window.confirm(`Delete “${job.job}”? The job will be hidden, and its applications will be retained.`)) return;
+        try {
+            const response = await fetch(`/api/recruiter/jobs/${job.job_id}`, { method: "DELETE" });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || "Unable to delete this job");
+            setJobs(prev => prev.filter(item => item.job_id !== job.job_id));
+        } catch (error) {
+            window.alert(error.message || "Unable to delete this job");
+        }
+    };
+
     return (
         <div>
             <Navbar/>
@@ -163,6 +175,15 @@ const Managejob = () => {
                                                     }}
                                                     >
                                                         Close
+                                                    </button>
+                                                    <button
+                                                    className='deleteJobBtn'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteJob(job);
+                                                    }}
+                                                    >
+                                                        Delete
                                                     </button>
                                                 </TableCell>
                                             </TableRow>

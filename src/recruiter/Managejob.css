@@ -47,3 +47,13 @@
 } .recruiter .status-cell.draft > span{
     background-color: khaki;
 }
+.recruiter .deleteJobBtn{
+    margin-left: 6px;
+    padding: 7px 10px;
+    border: 1px solid #b42318;
+    border-radius: 4px;
+    background: #fff;
+    color: #b42318;
+    cursor: pointer;
+    font-size: 12px;
+}

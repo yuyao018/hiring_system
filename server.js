@@ -16,6 +16,7 @@ app.use('/api', (req, res, next) => {
 });
 app.use('/api/careers', require('./careers-api'));
 app.use('/api/recruiter', require('./recruiter-api'));
+app.use('/api/profile', require('./profile-api'));
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
 app.use(express.static(path.join(__dirname, 'build')));
 app.get('/{*path}', (req, res) => res.sendFile(path.join(__dirname, 'build/index.html')));

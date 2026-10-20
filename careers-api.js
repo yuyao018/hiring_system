@@ -15,6 +15,10 @@ router.get('/applications', ...requireRole('applicant'), async (req, res) => {
  const applications = unwrap(await req.db.from('applicant').select('applicant_id,applicant_name,status,created_at,role_applied,job:job!role_applied(job,job_type)').eq('user_id', req.user.id).order('created_at', { ascending: false }));
  res.json({ applications });
 });
+router.delete('/applications/:applicationId', ...requireRole('applicant'), async (req, res) => {
+ const result = await require('./src/recruiter/database/applicant').softDeleteApplicant(req.db, req.params.applicationId, req.user.id);
+ res.status(result.success ? 200 : 404).json(result);
+});
 router.post('/applicants', ...requireRole('applicant'), upload.single('resume'), async (req, res) => {
  try { await addApplicants(req.user, req.body, req.file); res.status(201).json({ message: 'Submitted successfully!' }); }
  finally { if (req.file) await fs.unlink(req.file.path).catch(() => {}); }

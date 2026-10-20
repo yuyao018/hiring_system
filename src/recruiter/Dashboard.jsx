@@ -127,6 +127,19 @@ const Dashboard = () => {
         }
     };
 
+    const handleDeleteApplicant = async (applicant) => {
+        if (!window.confirm(`Delete ${applicant.applicant_name}'s application? It will be removed from active review but retained in the audit history.`)) return;
+        try {
+            const response = await fetch(`/api/recruiter/applicants/${applicant.applicant_id}`, { method: "DELETE" });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.message || "Unable to delete this application");
+            setApplicants(prev => prev.filter(item => item.applicant_id !== applicant.applicant_id));
+            setSelectedApplicantIndex(null);
+        } catch (error) {
+            window.alert(error.message || "Unable to delete this application");
+        }
+    };
+
     return (
         <div>
             <Navbar/>
@@ -251,6 +264,7 @@ const Dashboard = () => {
                                 <div className='buttonGroup'>
                                     <Button variant='outlined' color='success' className='shortlistBtn' onClick={() => handleUpdateApplicantStatus(selected.applicant_id, "Shortlisted")}>Shortlist</Button>
                                     <Button variant='outlined' color='error' className='RejectBtn' onClick={() => handleUpdateApplicantStatus(selected.applicant_id, "Rejected")}>Reject</Button>
+                                    <Button variant='outlined' color='error' onClick={() => handleDeleteApplicant(selected)}>Delete application</Button>
                                 </div>
 
                                 <div className='applicantInfo'>

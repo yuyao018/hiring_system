@@ -153,9 +153,13 @@ GRANT INSERT,UPDATE ON public.job TO authenticated;
 GRANT UPDATE(deleted_at,is_deleted,updated_at) ON public.job TO authenticated;
 -- Managers can change status, but cannot change ownership, stored resumes or scores.
 GRANT UPDATE(status,updated_at) ON public.applicant TO authenticated;
+GRANT UPDATE(is_deleted,deleted_at,updated_at) ON public.applicant TO authenticated;
+GRANT UPDATE(is_deleted,deleted_at) ON public.profiles TO authenticated;
 GRANT ALL ON public.profiles,public.job,public.applicant TO service_role;
 DROP POLICY IF EXISTS profiles_read ON public.profiles;
 CREATE POLICY profiles_read ON public.profiles FOR SELECT TO authenticated USING (id=auth.uid() AND NOT is_deleted);
+DROP POLICY IF EXISTS profiles_self_delete ON public.profiles;
+CREATE POLICY profiles_self_delete ON public.profiles FOR UPDATE TO authenticated USING (id=auth.uid() AND NOT is_deleted) WITH CHECK (id=auth.uid() AND is_deleted);
 DROP POLICY IF EXISTS jobs_public ON public.job;
 CREATE POLICY jobs_public ON public.job FOR SELECT TO anon USING (status='Active' AND NOT is_deleted);
 DROP POLICY IF EXISTS jobs_read ON public.job;
@@ -170,6 +174,8 @@ DROP POLICY IF EXISTS applications_read ON public.applicant;
 CREATE POLICY applications_read ON public.applicant FOR SELECT TO authenticated USING (NOT is_deleted AND (user_id=auth.uid() OR public.is_hiring_manager()));
 DROP POLICY IF EXISTS applications_update ON public.applicant;
 CREATE POLICY applications_update ON public.applicant FOR UPDATE TO authenticated USING (public.is_hiring_manager()) WITH CHECK (public.is_hiring_manager());
+DROP POLICY IF EXISTS applications_self_delete ON public.applicant;
+CREATE POLICY applications_self_delete ON public.applicant FOR UPDATE TO authenticated USING (user_id=auth.uid() AND NOT is_deleted) WITH CHECK (user_id=auth.uid() AND is_deleted);
 -- Applications and resume uploads are inserted only by the authenticated server handler,
 -- using its secret key so applicants cannot forge compatibility scores or ownership.
 INSERT INTO storage.buckets (id,name,public,file_size_limit,allowed_mime_types)

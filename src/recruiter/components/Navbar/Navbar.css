@@ -40,3 +40,4 @@
     font-weight: 400;
 }
 .recruiter .navbar button { margin-left: 24px; padding: 8px 14px; border: 1px solid #173e8b; border-radius: 6px; background: white; color: #173e8b; cursor: pointer; }
+.recruiter .navbar button.deleteProfileBtn { border-color: #b42318; color: #b42318; }

@@ -7,4 +7,14 @@ async function updateApplicantStatus(db, id, status) {
  const rows = unwrap(await db.from('applicant').update({ status, updated_at: new Date().toISOString() }).eq('applicant_id', id).select());
  return { success: rows.length > 0, applicant: rows[0] || null };
 }
-module.exports = { getApplicants, updateApplicantStatus };
+async function softDeleteApplicant(db, id, userId) {
+ let find = db.from('applicant').select('applicant_id').eq('applicant_id', id).eq('is_deleted', false);
+ if (userId) find = find.eq('user_id', userId);
+ if (!unwrap(await find.maybeSingle())) return { success: false };
+ const deletedAt = new Date().toISOString();
+ let update = db.from('applicant').update({ is_deleted: true, deleted_at: deletedAt, updated_at: deletedAt }).eq('applicant_id', id).eq('is_deleted', false);
+ if (userId) update = update.eq('user_id', userId);
+ unwrap(await update);
+ return { success: true };
+}
+module.exports = { getApplicants, updateApplicantStatus, softDeleteApplicant };
