@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import createCache from '@emotion/cache';
+import { CacheProvider } from '@emotion/react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Careers from './candidate/App';
 import Apply from './candidate/Apply';
@@ -14,6 +16,8 @@ import { Edit } from './recruiter/Edit';
 import { AuthProvider, dashboardFor, useAuth } from './auth/AuthContext';
 import './candidate/index.css';
 import './recruiter/index.css';
+const cspNonce = document.querySelector('meta[name="csp-nonce"]')?.content;
+const emotionCache = createCache({ key: 'css', nonce: cspNonce });
 function Protected({ role, children }) {
  const { user, loading, error, refresh } = useAuth(), location = useLocation();
  if (loading) return <p>Loading...</p>;
@@ -42,4 +46,4 @@ function App() {
   <Route path="*" element={<Navigate to="/" replace />} />
  </Routes></div>;
 }
-ReactDOM.createRoot(document.getElementById('root')).render(<BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter>);
+ReactDOM.createRoot(document.getElementById('root')).render(<CacheProvider value={emotionCache}><BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter></CacheProvider>);

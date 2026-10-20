@@ -146,7 +146,7 @@ const Managejob = () => {
                                             <TableRow
                                             key={index}
                                             hover
-                                            style={{ cursor: "pointer" }}
+                                            className="job-row-clickable"
                                             onClick={() => navigate(`/recruiter/edit/${job.job_id}`)}
                                             >
                                                 <TableCell>{job.job_id || 'N/A'}</TableCell>

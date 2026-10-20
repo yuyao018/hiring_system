@@ -209,7 +209,7 @@ const Dashboard = () => {
                         ) : (
                             filteredApplicants
                                 .map((applicant, index) => (
-                                <div key={index} onClick={() => setSelectedApplicantIndex(index)} style={{cursor: 'pointer'}}>
+                                <div key={index} className='applicant-card-select' onClick={() => setSelectedApplicantIndex(index)}>
                                     <Card
                                         jobName={applicant.job_name || applicant.role_applied}
                                         applicantName={applicant.applicant_name}
@@ -286,8 +286,25 @@ const Dashboard = () => {
                                 <div className='resultContainer'>
                                     <div className='score'>
                                         <h4 className='score-section'>Total Score</h4>
-                                        <div className='circular' style={{"--value": `${animatedPercent}`}}>
-                                            <span>{animatedPercent}%</span>
+                                        <div className='circular' role='img' aria-label={`Compatibility score ${animatedPercent}%`}>
+                                            <svg viewBox='0 0 100 100' aria-hidden='true' focusable='false'>
+                                                <defs>
+                                                    <linearGradient id='compatibility-gradient' x1='0' y1='0' x2='1' y2='1'>
+                                                        <stop offset='0%' stopColor='#AE00FB' />
+                                                        <stop offset='100%' stopColor='#3E00FF' />
+                                                    </linearGradient>
+                                                </defs>
+                                                <circle className='circular-track' cx='50' cy='50' r='46.4' />
+                                                <circle
+                                                    className='circular-value'
+                                                    cx='50'
+                                                    cy='50'
+                                                    r='46.4'
+                                                    strokeDasharray='291.54'
+                                                    strokeDashoffset={291.54 * (1 - animatedPercent / 100)}
+                                                />
+                                            </svg>
+                                            <span aria-hidden='true'>{animatedPercent}%</span>
                                         </div>
                                     </div>
 

@@ -304,7 +304,7 @@ const MBTI = ({ onAnswersChange, clearTrigger }) => {
     return (
         <div className="mbti-container">
             <div className="mbti-progress">
-                <div className="mbti-progress-bar" style={{ width: `${(progress / questions.length) * 100}%` }} />
+                <progress className="mbti-progress-bar" max={questions.length} value={progress} aria-label="Questionnaire progress" />
             </div>
 
             {!isComplete ? (

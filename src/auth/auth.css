@@ -1,5 +1,5 @@
 body { margin: 0; }
-.auth-page { min-height: 100vh; background: #f4f7fc; font-family: Poppins, Arial, sans-serif; padding: 32px 20px; box-sizing: border-box; }
+.auth-page { min-height: 100vh; background: #f4f7fc; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 32px 20px; box-sizing: border-box; }
 .auth-brand { display: block; color: #173e8b; font-weight: 700; font-size: 30px; text-decoration: none; max-width: 440px; margin: 0 auto 24px; }
 .auth-card { background: white; max-width: 440px; padding: 32px; margin: 0 auto; border-radius: 16px; box-shadow: 0 8px 40px #15376014; box-sizing: border-box; }
 .auth-card h1 { font-size: 26px; color: #142b50; margin-top: 0; }

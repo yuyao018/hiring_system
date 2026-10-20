@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 } .recruiter .manageJobContainer{
     margin: 100px auto 20px auto;
     padding: 20px;
@@ -15,6 +15,8 @@
 } .recruiter .manageJobContent{
     max-width: 1200px;
     margin: 0 auto;
+} .recruiter .job-row-clickable{
+    cursor: pointer;
 } .recruiter .publishBtn{
     padding: 4px 8px;
     margin: 0 2px;

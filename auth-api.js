@@ -5,11 +5,12 @@ const router = require('express').Router();
 const { publicClient } = require('./lib/supabase');
 const { requireUser, setSession, clearSession, cookies } = require('./session');
 const { ipLimiter, accountLimiter } = require('./lib/login-rate-limit').createLoginLimiters();
-router.post('/login', ipLimiter, (req, res, next) => {
+router.post('/login', (req, res, next) => {
  const { email, password } = req.body || {};
  if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) return res.status(400).json({ message: 'Email and password are required' });
+ if (!isValidEmail(email, 254)) return res.status(400).json({ message: 'Enter a valid email address.' });
  next();
-}, accountLimiter, async (req, res) => {
+}, ipLimiter, accountLimiter, async (req, res) => {
  const { email, password } = req.body;
  const { data, error } = await publicClient().auth.signInWithPassword({ email: email.trim(), password });
  if (error?.status === 429 || error?.code === 'over_request_rate_limit') return res.status(429).json({ code: 'login_rate_limited', message: 'Login is temporarily limited. Please wait and try again.' });

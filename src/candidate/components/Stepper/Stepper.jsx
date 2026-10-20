@@ -15,7 +15,6 @@ const Stepper = ({ steps, currentStep, sectionIds }) => {
             <div
                 className={`circle ${index === currentStep ? "active" : ""}`}
                 onClick={() => handleClick(sectionIds[index])}
-                style={{ cursor: "pointer" }}
             >
                 {index + 1}
             </div>
