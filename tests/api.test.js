@@ -1,6 +1,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 let signupError = null;
+let loginCalls = 0;
+let loginError = null;
 let server, base, signupOptions, insertedApplication, createdJob, requestedOwner, signedPath;
 const users = {
  applicant: { id: 'applicant-id', email: 'applicant@example.com', name: 'Applicant', role: 'applicant' },
@@ -44,6 +46,8 @@ function fakeClient(token, admin = false) {
   }) },
   auth: {
    signInWithPassword: async ({ email, password }) => {
+    loginCalls++;
+    if (loginError) return { error: loginError, data: {} };
     const role = email === users.manager.email ? 'manager' : 'applicant';
     return password === 'valid-password' ? { data: { session: session(role) } } : { error: true, data: {} };
    },
@@ -100,10 +104,48 @@ test('one login serves both roles, session derives role from trusted profile', a
  }
  assert.equal((await fetch(base + '/api/auth/login', json({ email: users.applicant.email, password: 'wrong' }))).status, 401);
 });
+test('login blocks the sixth failed attempt and cannot bypass the limit with email case or spaces', async () => {
+ const email = 'limit-test@example.com';
+ for (let i = 0; i < 5; i++) {
+  const response = await fetch(base + '/api/auth/login', json({ email, password: 'incorrect' }));
+  assert.equal(response.status, 401);
+  const data = await response.json();
+  assert.equal(data.remainingAttempts, 4 - i);
+  if (i < 4) assert.match(data.message, new RegExp(`${4 - i} more login attempt`));
+  else { assert.match(data.message, /No login attempts remaining/); assert.ok(data.retryAfter > 0); }
+ }
+ const before = loginCalls;
+ const response = await fetch(base + '/api/auth/login', json({ email: '  LIMIT-TEST@EXAMPLE.COM  ', password: 'valid-password' }));
+ assert.equal(response.status, 429);
+ assert.ok(Number(response.headers.get('retry-after')) > 0);
+ assert.ok(response.headers.get('ratelimit'));
+ assert.equal((await response.json()).code, 'login_rate_limited');
+ assert.equal(loginCalls, before, 'Blocked requests must not contact Supabase');
+ const other = await fetch(base + '/api/auth/login', json({ email: 'other-test@example.com', password: 'valid-password' }));
+ assert.equal(other.status, 200);
+});
+test('login preserves upstream Supabase rate-limit responses', async () => {
+ loginError = { status: 429, code: 'over_request_rate_limit' };
+ try {
+  const response = await fetch(base + '/api/auth/login', json({ email: 'upstream-test@example.com', password: 'incorrect' }));
+  assert.equal(response.status, 429);
+  assert.equal((await response.json()).code, 'login_rate_limited');
+ } finally { loginError = null; }
+});
 test('signup ignores forged hiring-manager role and supports email confirmation', async () => {
- const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'long-password', role: 'hiring_manager' }));
+ const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'StrongPass1!', role: 'hiring_manager' }));
  assert.equal(response.status, 201); assert.equal((await response.json()).needsConfirmation, true);
  assert.deepEqual(signupOptions.options.data, { name: 'New applicant' });
+});
+test('registration rejects passwords missing any required rule before contacting Supabase', async () => {
+ const invalid = ['Aa1!short', 'alllowercase1!', 'ALLUPPERCASE1!', 'MissingDigits!', 'MissingSymbol12', 'Abcdefghij1 ', '', null, 123456789012, ['StrongPass1!']];
+ for (const password of invalid) {
+  const before = signupOptions;
+  const response = await fetch(base + '/api/auth/register', json({ name: 'Applicant', email: 'new@example.com', password }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).code, 'weak_password');
+  assert.equal(signupOptions, before, 'Rejected password must not reach Supabase signup');
+ }
 });
 test('registration explains duplicate accounts, rate limits and database failures', async () => {
  try {
@@ -113,7 +155,7 @@ test('registration explains duplicate accounts, rate limits and database failure
    ['unexpected_failure',500,'could not save your account']
   ]) {
    signupError = { code, status };
-   const response = await fetch(base + '/api/auth/register', json({ name: 'Applicant', email: 'new@example.com', password: 'long-password' }));
+   const response = await fetch(base + '/api/auth/register', json({ name: 'Applicant', email: 'new@example.com', password: 'StrongPass1!' }));
    assert.equal(response.status, status === 429 ? 429 : 400);
    const data = await response.json(); assert.equal(data.code, code); assert.ok(data.message.includes(expected));
   }

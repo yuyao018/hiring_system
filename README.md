@@ -53,3 +53,15 @@ The `/api/health` endpoint checks server liveness, not Supabase connectivity. Fo
 Keep `npm run dev` running while opening confirmation emails on this computer. The website runs on port 3000, independently of the API's `PORT=5000`. `FRONTEND_PORT` can override the frontend port; if changed, update Supabase Authentication > URL Configuration to match. For the default local setup use Site URL `http://localhost:3000` and allow redirects to `http://localhost:3000/**`.
 
 If email verification redirects to an unavailable page, verification may already have succeeded. Start the app and try logging in at `http://localhost:3000/login`. A localhost link only works on the computer running the app. For other devices or a deployed website, configure the corresponding reachable site URL in Supabase.
+
+## Password requirements
+
+New accounts require at least 12 characters, including uppercase and lowercase letters, a digit, and a special character. Whitespace alone does not count as a special character. The registration form, Express registration endpoint, and account-provisioning script share this policy. Existing accounts can still log in using their current passwords. Configure the same password policy in Supabase Authentication settings to also enforce it for requests made directly to Supabase, outside the application API.
+
+## Login throttling
+
+The login endpoint allows five failed authentication attempts per normalized email address in a 15-minute window. The sixth attempt returns HTTP 429 before contacting Supabase, including a `Retry-After` header, rate-limit headers and a user-friendly message. Successful requests do not consume the failed-attempt quota; earlier failures remain counted until the window resets. A second limit permits 30 failed login requests per client IP per 15 minutes to discourage attempts across many accounts. Supabase throttling responses also remain HTTP 429 rather than being disguised as invalid credentials.
+
+Only loopback proxies are trusted for forwarded client IPs, matching the local Caddy and React proxy setup. If moving to another proxy, configure its trusted addresses explicitly and restrict direct access to the backend. Counters use process memory and reset on restart; use a shared persistent store such as Redis for multi-instance or restart-resilient deployment. Account-wide throttling can temporarily block a legitimate user targeted by repeated failures, so monitor this trade-off and consider MFA or challenge-based controls for production.
+
+Failed-login messages show the remaining attempts (4, 3, 2, 1, then 0) without identifying whether the email or password was incorrect. When the quota is exhausted, the response includes the remaining wait time. The IP quota can shorten the displayed allowance if the connection is already throttled.

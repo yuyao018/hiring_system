@@ -13,3 +13,45 @@ body { margin: 0; }
 .candidate .application-list { max-width: 1000px; margin: 110px auto 40px; padding: 20px; }
 .candidate .application-list article { border: 1px solid #dbe3ef; border-radius: 10px; padding: 20px; background: white; margin: 16px 0; }
 .candidate .application-list h1 { font-size: 28px; }
+
+.auth-card .password-guidance {
+ margin: -4px 0 24px;
+ padding: 16px 18px;
+ border: 1px solid #d5e2f5;
+ border-radius: 12px;
+ background: #f5f8ff;
+ color: #344866;
+}
+.auth-card .password-guidance h2 {
+ margin: 0 0 10px;
+ color: #173e8b;
+ font-size: 14px;
+ font-weight: 600;
+ line-height: 1.5;
+}
+.auth-card .password-guidance ul {
+ margin: 0;
+ padding-left: 19px;
+ font-size: 13px;
+ line-height: 1.65;
+}
+.auth-card .password-guidance li + li { margin-top: 5px; }
+.auth-card .password-guidance li::marker { color: #5478af; }
+.auth-card .password-guidance li span { color: #52627a; }
+
+.auth-card .auth-message-error {
+ margin: 0 0 20px;
+ padding: 14px 16px;
+ border: 1px solid #f0b8b8;
+ border-left: 4px solid #bd2525;
+ border-radius: 10px;
+ background: #fff4f4;
+ color: #942020;
+ font-size: 13px;
+ line-height: 1.6;
+ overflow-wrap: anywhere;
+}
+.auth-card .auth-message-error strong { display: block; margin-bottom: 6px; font-weight: 600; }
+.auth-card .auth-message-error ul { margin: 0; padding-left: 19px; }
+.auth-card .auth-message-error li + li { margin-top: 4px; }
+.auth-card input[aria-invalid="true"] { border-color: #bd2525; box-shadow: 0 0 0 2px #bd252512; }

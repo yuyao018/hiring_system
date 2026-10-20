@@ -4,6 +4,8 @@ const fs = require('fs');
 fs.mkdirSync(path.join(__dirname, 'uploads/temp'), { recursive: true });
 const express = require('express');
 const app = express();
+// Caddy and the React development proxy connect locally. Never trust arbitrary remote proxies.
+app.set('trust proxy', 'loopback');
 app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./auth-api'));
