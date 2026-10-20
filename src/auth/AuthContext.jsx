@@ -1,7 +1,7 @@
 import { readJson } from './api';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 const AuthContext = createContext(null);
-export const dashboardFor = user => user?.role === 'hiring_manager' ? '/recruiter/dashboard' : '/applicant/dashboard';
+export const dashboardFor = user => user?.mfa?.required && !user.mfa.verified ? '/mfa' : user?.role === 'hiring_manager' ? '/recruiter/dashboard' : '/applicant/dashboard';
 export function AuthProvider({ children }) {
  const [user, setUser] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState('');
  const refresh = useCallback(async () => {

@@ -26,7 +26,7 @@ export default function Login() {
    if (!current) throw new Error('Please log in to continue');
    // Only resume an application flow for an applicant; role decides dashboard access.
    const from = location.state?.from;
-   navigate(current.role === 'applicant' && from?.pathname === '/apply' ? from.pathname : dashboardFor(current), { replace: true, state: from?.state });
+   navigate(!current.mfa?.required && current.role === 'applicant' && from?.pathname === '/apply' ? from.pathname : dashboardFor(current), { replace: true, state: from?.state });
   } catch (err) { setMessage(err.message); }
   finally { setBusy(false); }
  }

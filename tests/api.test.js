@@ -8,6 +8,8 @@ const users = {
  applicant: { id: 'applicant-id', email: 'applicant@example.com', name: 'Applicant', role: 'applicant' },
  manager: { id: 'manager-id', email: 'manager@example.com', name: 'Manager', role: 'hiring_manager' }
 };
+const managerToken = 'test.' + Buffer.from(JSON.stringify({ aal: 'aal2' })).toString('base64url') + '.signed';
+const identityFor = token => users[token === managerToken ? 'manager' : token];
 const revoked = new Set();
 const session = token => ({ access_token: token, refresh_token: 'refresh-' + token, expires_in: 3600 });
 function query(table, identity, admin = false) {
@@ -37,7 +39,7 @@ function query(table, identity, admin = false) {
  return chain;
 }
 function fakeClient(token, admin = false) {
- const identity = revoked.has(token) ? null : users[token];
+ const identity = revoked.has(token) ? null : identityFor(token);
  return {
   from: table => query(table, identity, admin),
   storage: { from: () => ({
@@ -51,7 +53,7 @@ function fakeClient(token, admin = false) {
     const role = email === users.manager.email ? 'manager' : 'applicant';
     return password === 'valid-password' ? { data: { session: session(role) } } : { error: true, data: {} };
    },
-   getUser: async jwt => users[jwt] && !revoked.has(jwt) ? { data: { user: users[jwt] } } : { error: true },
+   getUser: async jwt => identityFor(jwt) && !revoked.has(jwt) ? { data: { user: identityFor(jwt) } } : { error: true },
    refreshSession: async ({ refresh_token }) => {
     const jwt = refresh_token.replace('refresh-', '');
     return users[jwt] && !revoked.has(jwt) ? { data: { session: session(jwt) } } : { error: true };
@@ -61,7 +63,7 @@ function fakeClient(token, admin = false) {
   }
  };
 }
-const cookie = role => `high5_access=${role}; high5_refresh=refresh-${role}`;
+const cookie = role => `high5_access=${role === 'manager' ? managerToken : role}; high5_refresh=refresh-${role}`;
 const json = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 before(async () => {
  const supabase = require('../lib/supabase');

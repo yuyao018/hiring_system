@@ -8,11 +8,12 @@ const app = express();
 app.set('trust proxy', 'loopback');
 app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-app.use('/api/auth', require('./auth-api'));
+app.use('/api/auth', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); }, require('./auth-api'));
+app.use('/api/auth/mfa', require('./mfa-api'));
 // Only authentication and published job browsing are public. New APIs are private by default.
 app.use('/api', (req, res, next) => {
  if (['GET', 'HEAD'].includes(req.method) && req.path === '/careers/jobs') return next();
- return require('./session').requireUser(req, res, next);
+ return require('./session').requireUser(req, res, error => error ? next(error) : require('./session').requireMfa(req, res, next));
 });
 app.use('/api/careers', require('./careers-api'));
 app.use('/api/recruiter', require('./recruiter-api'));

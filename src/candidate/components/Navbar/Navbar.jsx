@@ -18,6 +18,10 @@ export default function Navbar() {
   } catch (err) { window.alert(err.message); }
  }
  return <header className="header"><Link to="/" className="logo">High5</Link><nav className="navbar">
+<<<<<<< HEAD
   <Link to="/">Careers</Link>{user ? <><Link to={dashboardFor(user)}>My dashboard</Link><button onClick={deleteProfile} className="deleteProfileBtn">Delete account</button><button onClick={signOut}>Log out</button></> : <Link to="/login">Log in</Link>}
+=======
+  <Link to="/">Careers</Link>{user ? <><Link to={dashboardFor(user)}>My dashboard</Link><Link to="/security">Security</Link><button onClick={signOut}>Log out</button></> : <Link to="/login">Log in</Link>}
+>>>>>>> 9f36a5f (Add TOTP for MFA authentication)
  </nav></header>;
 }

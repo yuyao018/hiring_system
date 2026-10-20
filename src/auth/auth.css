@@ -55,3 +55,11 @@ body { margin: 0; }
 .auth-card .auth-message-error ul { margin: 0; padding-left: 19px; }
 .auth-card .auth-message-error li + li { margin-top: 4px; }
 .auth-card input[aria-invalid="true"] { border-color: #bd2525; box-shadow: 0 0 0 2px #bd252512; }
+.auth-card .mfa-setup { margin: 20px 0; padding: 16px; border: 1px solid #d5e2f5; border-radius: 12px; background: #f5f8ff; }
+.auth-card .mfa-setup ol { padding-left: 20px; color: #344866; font-size: 14px; line-height: 1.6; }
+.auth-card .mfa-setup li + li { margin-top: 8px; }
+.auth-card .mfa-qr { display: block; width: 220px; max-width: 100%; height: auto; margin: 20px auto; background: white; }
+.auth-card .mfa-secret { display: block; overflow-wrap: anywhere; padding: 12px; background: white; border-radius: 6px; }
+.auth-card .mfa-help { font-size: 12px; margin-top: 24px; }
+.auth-card .mfa-success { padding: 16px; border: 1px solid #93c6a6; border-radius: 10px; background: #effaf2; color: #22603b; }
+.auth-card select { width: 100%; padding: 10px; margin-top: 8px; }
