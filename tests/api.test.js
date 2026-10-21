@@ -182,12 +182,12 @@ test('registration explains duplicate accounts, rate limits and database failure
   for (const [code,status,expected] of [
    ['user_already_exists',422,'already exists'],
    ['over_request_rate_limit',429,'Too many attempts'],
-   ['unexpected_failure',500,'could not save your account']
+   ['unexpected_failure',500,'Please try again later']
   ]) {
    signupError = { code, status };
    const response = await fetch(base + '/api/auth/register', json({ name: 'Applicant', email: 'new@example.com', password: 'StrongPass1!' }));
    assert.equal(response.status, status === 429 ? 429 : 400);
-   const data = await response.json(); assert.equal(data.code, code); assert.ok(data.message.includes(expected));
+   const data = await response.json(); assert.equal(data.code, code === 'unexpected_failure' ? 'registration_failed' : code); assert.ok(data.message.includes(expected));
   }
  } finally { signupError = null; }
 });

@@ -10,7 +10,8 @@ jest.mock('./AuthContext', () => ({
 function registration() {
  render(<MemoryRouter><Login /></MemoryRouter>);
  fireEvent.click(screen.getByRole('button', { name: 'New applicant? Create an account' }));
- return screen.getByLabelText('Password');
+ fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'test@example.com' } });
+ return screen.getByLabelText(/^Password/, { selector: 'input' });
 }
 test('shows only missing password rules and clears them when corrected', async () => {
  const password = registration();
@@ -40,11 +41,11 @@ test('native invalid password event displays actionable length feedback', () => 
 test('registration prompts email confirmation and clears the password', async () => {
  global.fetch = jest.fn().mockResolvedValue({ ok: true, headers: { get: () => 'application/json' }, json: async () => ({ needsConfirmation: true, message: 'Check your inbox and spam folder.' }) });
  const password = registration();
- fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Test applicant' } });
- fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
+ fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: 'Test applicant' } });
+ fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'new@example.com' } });
  fireEvent.change(password, { target: { value: 'StrongPass12!' } });
  fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form'));
  expect(await screen.findByRole('status')).toHaveTextContent('Check your inbox');
- expect(screen.getByLabelText('Password')).toHaveValue('');
+ expect(screen.getByLabelText(/^Password/, { selector: 'input' })).toHaveValue('');
  delete global.fetch;
 });
