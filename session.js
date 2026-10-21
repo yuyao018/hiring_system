@@ -26,6 +26,10 @@ async function requireUser(req, res, next) {
    }
   }
   if (result.error || !result.data?.user) { clearSession(res); return res.status(401).json({ message: 'Session expired. Please log in.' }); }
+  if (!result.data.user.email_confirmed_at) {
+   clearSession(res);
+   return res.status(403).json({ code: 'email_not_confirmed', message: 'Verify your email before logging in.' });
+  }
   req.db = publicClient(token);
   const profile = unwrap(await req.db.from('profiles').select('id,name,role').eq('id', result.data.user.id).maybeSingle());
   if (!profile) { clearSession(res); return res.status(403).json({ message: 'This account has been deactivated' }); }

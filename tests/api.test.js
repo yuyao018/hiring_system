@@ -1,12 +1,13 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 let signupError = null;
+let signupSession = null;
 let loginCalls = 0;
 let loginError = null;
 let server, base, signupOptions, insertedApplication, createdJob, requestedOwner, signedPath;
 const users = {
- applicant: { id: 'applicant-id', email: 'applicant@example.com', name: 'Applicant', role: 'applicant' },
- manager: { id: 'manager-id', email: 'manager@example.com', name: 'Manager', role: 'hiring_manager' }
+ applicant: { id: 'applicant-id', email: 'applicant@example.com', name: 'Applicant', role: 'applicant', email_confirmed_at: '2026-10-20T00:00:00Z' },
+ manager: { id: 'manager-id', email: 'manager@example.com', name: 'Manager', role: 'hiring_manager', email_confirmed_at: '2026-10-20T00:00:00Z' }
 };
 const managerToken = 'test.' + Buffer.from(JSON.stringify({ aal: 'aal2' })).toString('base64url') + '.signed';
 const identityFor = token => users[token === managerToken ? 'manager' : token];
@@ -51,14 +52,14 @@ function fakeClient(token, admin = false) {
     loginCalls++;
     if (loginError) return { error: loginError, data: {} };
     const role = email === users.manager.email ? 'manager' : 'applicant';
-    return password === 'valid-password' ? { data: { session: session(role) } } : { error: true, data: {} };
+    return password === 'valid-password' ? { data: { session: session(role), user: users[role] } } : { error: true, data: {} };
    },
    getUser: async jwt => identityFor(jwt) && !revoked.has(jwt) ? { data: { user: identityFor(jwt) } } : { error: true },
    refreshSession: async ({ refresh_token }) => {
     const jwt = refresh_token.replace('refresh-', '');
     return users[jwt] && !revoked.has(jwt) ? { data: { session: session(jwt) } } : { error: true };
    },
-   signUp: async options => { signupOptions = options; return { data: { session: null }, error: signupError }; },
+   signUp: async options => { signupOptions = options; return { data: { session: signupSession }, error: signupError }; },
    admin: { signOut: async jwt => { revoked.add(jwt); return { error: null }; } }
   }
  };
@@ -134,6 +135,33 @@ test('login preserves upstream Supabase rate-limit responses', async () => {
   assert.equal((await response.json()).code, 'login_rate_limited');
  } finally { loginError = null; }
 });
+test('login explains unconfirmed email and creates no cookies', async () => {
+ loginError = { status: 400, code: 'email_not_confirmed' };
+ try {
+  const response = await fetch(base + '/api/auth/login', json({ email: 'pending@example.com', password: 'valid-password' }));
+  assert.equal(response.status, 403); assert.equal((await response.json()).code, 'email_not_confirmed');
+  assert.equal(response.headers.get('set-cookie'), null);
+ } finally { loginError = null; }
+});
+test('unconfirmed users are blocked even if an upstream session exists', async () => {
+ const confirmed = users.applicant.email_confirmed_at;
+ users.applicant.email_confirmed_at = null;
+ try {
+  const login = await fetch(base + '/api/auth/login', json({ email: users.applicant.email, password: 'valid-password' }));
+  assert.equal(login.status, 403); assert.equal(login.headers.get('set-cookie'), null);
+  const response = await fetch(base + '/api/careers/applications', { headers: { cookie: cookie('applicant') } });
+  assert.equal(response.status, 403); assert.equal((await response.json()).code, 'email_not_confirmed');
+ } finally { users.applicant.email_confirmed_at = confirmed; }
+});
+test('signup never signs a browser in if Supabase confirmation is disabled', async () => {
+ signupSession = session('applicant');
+ try {
+  const response = await fetch(base + '/api/auth/register', json({ name: 'New', email: 'new@example.com', password: 'StrongPass12!' }));
+  assert.equal(response.status, 503); assert.equal((await response.json()).code, 'email_confirmation_disabled');
+  assert.equal(response.headers.get('set-cookie'), null);
+ } finally { signupSession = null; }
+});
+
 test('signup ignores forged hiring-manager role and supports email confirmation', async () => {
  const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'StrongPass1!', role: 'hiring_manager' }));
  assert.equal(response.status, 201); assert.equal((await response.json()).needsConfirmation, true);

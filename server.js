@@ -13,6 +13,7 @@ app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next
 app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./auth-api'));
+app.use('/api/auth', require('./email-verification-api'));
 app.use('/api/auth/mfa', require('./mfa-api'));
 // Only authentication and published job browsing are public. New APIs are private by default.
 app.use('/api', (req, res, next) => {

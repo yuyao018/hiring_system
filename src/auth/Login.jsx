@@ -36,7 +36,7 @@ export default function Login() {
   finally { setBusy(false); }
  }
  return <main className="auth-page"><Link className="auth-brand" to="/">High5</Link><form className="auth-card" onSubmit={submit}>
-  <h1>{register ? 'Create applicant account' : 'Welcome back'}</h1><p>{register ? 'Apply for jobs and track your applications.' : 'Applicants and hiring managers sign in here.'}</p>
+  <h1>{register ? 'Create applicant account' : 'Welcome back'}</h1><p>{register ? 'Verify your email after signing up, then log in to apply for jobs.' : 'Applicants and hiring managers sign in here.'}</p>
   {register && <label>Full name<input value={name} onChange={e => setName(e.target.value)} required maxLength={INPUT_LIMITS.name} autoComplete="name" /><small className="character-count">{name.length}/{INPUT_LIMITS.name} characters</small></label>}
   <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} required maxLength={emailLimit} autoComplete="email" aria-invalid={emailInvalid || undefined} aria-describedby={[emailInvalid && 'email-error', 'email-count'].filter(Boolean).join(' ')} /><small id="email-count" className="character-count">{email.length}/{emailLimit} characters</small></label>
   {emailInvalid && <p id="email-error" role="alert" className="auth-message auth-message-error">Enter a valid email address, for example name@example.com.</p>}

@@ -3,10 +3,10 @@ const assert = require('node:assert/strict');
 let server, base, calls = 0;
 const factor = { id: 'totp-id', factor_type: 'totp', status: 'verified', friendly_name: 'My app' };
 const users = {
- manager: { id: 'manager', role: 'hiring_manager', factors: [] },
- applicant: { id: 'applicant', role: 'applicant', factors: [] },
- enrolled: { id: 'enrolled', role: 'applicant', factors: [{ ...factor }] },
- guessing: { id: 'guessing', role: 'hiring_manager', factors: [{ ...factor }] }
+ manager: { id: 'manager', role: 'hiring_manager', email_confirmed_at: '2026-10-20T00:00:00Z', factors: [] },
+ applicant: { id: 'applicant', role: 'applicant', email_confirmed_at: '2026-10-20T00:00:00Z', factors: [] },
+ enrolled: { id: 'enrolled', role: 'applicant', email_confirmed_at: '2026-10-20T00:00:00Z', factors: [{ ...factor }] },
+ guessing: { id: 'guessing', role: 'hiring_manager', email_confirmed_at: '2026-10-20T00:00:00Z', factors: [{ ...factor }] }
 };
 const token = (id, aal = 'aal1') => 'test.' + Buffer.from(JSON.stringify({ sub: id, aal })).toString('base64url') + '.signed';
 const session = (id, aal) => ({ access_token: token(id, aal), refresh_token: 'refresh-' + id, expires_in: 3600 });
@@ -16,7 +16,7 @@ function identity(jwt) {
 function client(jwt) {
  let current = jwt;
  return {
-  from: () => { const chain = { select: () => chain, eq: () => chain, single: async () => ({ data: identity(current) }), order: async () => ({ data: [] }) }; return chain; },
+  from: () => { const chain = { select: () => chain, eq: () => chain, single: async () => ({ data: identity(current) }), maybeSingle: async () => ({ data: identity(current) }), order: async () => ({ data: [] }) }; return chain; },
   auth: {
    getUser: async value => identity(value || current) ? { data: { user: identity(value || current) } } : { error: true },
    setSession: async data => { current = data.access_token; return { data: { session: data } }; },

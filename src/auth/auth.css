@@ -64,3 +64,14 @@ body { margin: 0; }
 .auth-card .mfa-help { font-size: 12px; margin-top: 24px; }
 .auth-card .mfa-success { padding: 16px; border: 1px solid #93c6a6; border-radius: 10px; background: #effaf2; color: #22603b; }
 .auth-card select { width: 100%; padding: 10px; margin-top: 8px; }
+.auth-card .confirmation-action { margin: 24px 0 0; }
+.auth-card .auth-primary-link {
+ display: flex; align-items: center; justify-content: center;
+ width: 100%; min-height: 48px; padding: 12px 20px; box-sizing: border-box;
+ border: 1px solid #173e8b; border-radius: 8px;
+ background: #173e8b; color: #fff; font: inherit; font-weight: 600;
+ text-decoration: none; transition: background .15s ease, box-shadow .15s ease;
+}
+.auth-card .auth-primary-link:hover { background: #102e6c; box-shadow: 0 4px 12px #173e8b26; }
+.auth-card .auth-primary-link:focus-visible { outline: 3px solid #87b5ff; outline-offset: 3px; }
+.auth-card .auth-back-link { color: #173e8b; text-underline-offset: 3px; }

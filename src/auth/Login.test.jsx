@@ -36,3 +36,15 @@ test('native invalid password event displays actionable length feedback', () => 
  expect(screen.getByRole('alert')).toHaveTextContent('At least 12 characters');
  expect(screen.getByRole('alert').querySelectorAll('li')).toHaveLength(1);
 });
+
+test('registration prompts email confirmation and clears the password', async () => {
+ global.fetch = jest.fn().mockResolvedValue({ ok: true, headers: { get: () => 'application/json' }, json: async () => ({ needsConfirmation: true, message: 'Check your inbox and spam folder.' }) });
+ const password = registration();
+ fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Test applicant' } });
+ fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } });
+ fireEvent.change(password, { target: { value: 'StrongPass12!' } });
+ fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form'));
+ expect(await screen.findByRole('status')).toHaveTextContent('Check your inbox');
+ expect(screen.getByLabelText('Password')).toHaveValue('');
+ delete global.fetch;
+});

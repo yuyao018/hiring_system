@@ -13,6 +13,7 @@ router.post('/login', (req, res, next) => {
 }, ipLimiter, accountLimiter, async (req, res) => {
  const { email, password } = req.body;
  const { data, error } = await publicClient().auth.signInWithPassword({ email: email.trim(), password });
+ if (error?.code === 'email_not_confirmed') return res.status(403).json({ code: 'email_not_confirmed', message: 'Verify your email before logging in. Check your inbox and spam folder, or contact the administrator for help.' });
  if (error?.status === 429 || error?.code === 'over_request_rate_limit') return res.status(429).json({ code: 'login_rate_limited', message: 'Login is temporarily limited. Please wait and try again.' });
  if (error || !data?.session) {
   const quotas = [req.loginAccountRate, req.loginIpRate];
@@ -27,11 +28,12 @@ router.post('/login', (req, res, next) => {
   return res.status(401).json({ code: 'invalid_credentials', remainingAttempts,
    message: `Invalid email or password. You have ${remainingAttempts} more login attempt${remainingAttempts === 1 ? '' : 's'} before temporary blocking.` });
  }
+ if (!data.user?.email_confirmed_at) return res.status(403).json({ code: 'email_not_confirmed', message: 'Verify your email before logging in.' });
  setSession(res, data.session);
  res.json({ success: true });
 });
 router.post('/register', async (req, res) => {
- const { name, email, password } = req.body;
+ const { name, email, password } = req.body || {};
  if (typeof name !== 'string' || !name.trim()) return res.status(400).json({ message: 'Enter your name.' });
  if (name.trim().length > INPUT_LIMITS.name) return res.status(400).json({ message: `Your name must be ${INPUT_LIMITS.name} characters or fewer.` });
  if (!isValidEmail(email)) return res.status(400).json({ message: 'Enter a valid email address.' });
@@ -43,6 +45,7 @@ router.post('/register', async (req, res) => {
    user_already_exists: 'An account with this email already exists. Please log in instead.',
    email_exists: 'An account with this email already exists. Please log in instead.',
    weak_password: PASSWORD_REQUIREMENTS,
+   email_address_not_authorized: 'Email delivery is restricted. Ask the administrator to configure Supabase SMTP.',
    email_address_invalid: 'Enter a valid email address.',
    signup_disabled: 'Unable to create an account right now. Please try again later.',
    email_provider_disabled: 'Unable to create an account right now. Please try again later.',
@@ -56,8 +59,9 @@ router.post('/register', async (req, res) => {
   const publicCode = publicCodes.has(error.code) ? error.code : 'registration_failed';
   return res.status(error.status === 429 ? 429 : 400).json({ code: publicCode, message: messages[error.code] || 'Registration failed. Please try again or contact the administrator.' });
  }
- if (data.session) setSession(res, data.session);
- res.status(201).json({ success: true, needsConfirmation: !data.session, message: data.session ? 'Account created' : 'Check your email to confirm your account, then log in.' });
+ // Confirmation must be enabled in Supabase; signup must never create browser login cookies.
+ if (data.session) return res.status(503).json({ code: 'email_confirmation_disabled', message: 'Email confirmation is not enabled. Ask the administrator to enable it in Supabase before registering.' });
+ res.status(201).json({ success: true, needsConfirmation: true, message: 'Check your inbox and spam folder for the confirmation email. Verify your email, then return here to log in.' });
 });
 router.get('/session', requireUser, (req, res) => res.json({ user: req.user }));
 router.post('/logout', async (req, res) => {

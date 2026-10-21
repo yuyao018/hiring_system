@@ -8,6 +8,7 @@ import Apply from './candidate/Apply';
 import Success from './candidate/SuccessPage';
 import Login from './auth/Login';
 import Mfa from './auth/Mfa';
+import ConfirmEmail from './auth/ConfirmEmail';
 import ApplicantDashboard from './candidate/Dashboard';
 import Dashboard from './recruiter/Dashboard';
 import Form from './recruiter/Form';
@@ -30,9 +31,10 @@ function App() {
  const { pathname } = useLocation();
  const manager = children => <Protected role="hiring_manager">{children}</Protected>;
  const applicant = children => <Protected role="applicant">{children}</Protected>;
- return <div className={['/login', '/mfa', '/security'].includes(pathname) ? 'auth' : pathname.startsWith('/recruiter') ? 'recruiter' : 'candidate'}><Routes>
+ return <div className={['/login', '/mfa', '/security', '/verify-email'].includes(pathname) ? 'auth' : pathname.startsWith('/recruiter') ? 'recruiter' : 'candidate'}><Routes>
   <Route path="/" element={<Careers />} />
   <Route path="/login" element={<Login />} />
+  <Route path="/verify-email" element={<ConfirmEmail />} />
   <Route path="/mfa" element={<Mfa />} />
   <Route path="/security" element={<Mfa settings />} />
   <Route path="/apply" element={applicant(<Apply />)} />
