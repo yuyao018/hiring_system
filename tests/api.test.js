@@ -1,5 +1,6 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const { termsVersion, privacyVersion } = require('../src/legal/policyVersions');
 let signupError = null;
 let signupSession = null;
 let loginCalls = 0;
@@ -65,7 +66,7 @@ function fakeClient(token, admin = false) {
  };
 }
 const cookie = role => `high5_access=${role === 'manager' ? managerToken : role}; high5_refresh=refresh-${role}`;
-const json = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const json = body => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ termsAccepted: true, privacyAcknowledged: true, termsVersion, privacyVersion, ...body }) });
 before(async () => {
  const supabase = require('../lib/supabase');
  supabase.publicClient = token => fakeClient(token);
@@ -165,8 +166,18 @@ test('signup never signs a browser in if Supabase confirmation is disabled', asy
 test('signup ignores forged hiring-manager role and supports email confirmation', async () => {
  const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'StrongPass1!', role: 'hiring_manager' }));
  assert.equal(response.status, 201); assert.equal((await response.json()).needsConfirmation, true);
- assert.deepEqual(signupOptions.options.data, { name: 'New applicant' });
+ assert.deepEqual({ ...signupOptions.options.data, policies_acknowledged_at: undefined }, { name: 'New applicant', terms_version: termsVersion, privacy_notice_version: privacyVersion, policies_acknowledged_at: undefined });
+ assert.ok(!Number.isNaN(Date.parse(signupOptions.options.data.policies_acknowledged_at)));
 });
+test('registration rejects absent, false, string and outdated policy acknowledgements', async () => {
+ for (const override of [{ termsAccepted: false }, { privacyAcknowledged: false }, { termsAccepted: 'true' }, { termsVersion: 'old' }, { privacyVersion: undefined }]) {
+  const before = signupOptions;
+  const response = await fetch(base + '/api/auth/register', json({ name: 'New applicant', email: 'new@example.com', password: 'StrongPass12!', ...override }));
+  assert.equal(response.status, 400); assert.equal((await response.json()).code, 'policy_acceptance_required');
+  assert.equal(signupOptions, before, 'Unacknowledged signup must not reach Supabase');
+ }
+});
+
 test('registration rejects passwords missing any required rule before contacting Supabase', async () => {
  const invalid = ['Aa1!short', 'alllowercase1!', 'ALLUPPERCASE1!', 'MissingDigits!', 'MissingSymbol12', 'Abcdefghij1 ', '', null, 123456789012, ['StrongPass1!']];
  for (const password of invalid) {

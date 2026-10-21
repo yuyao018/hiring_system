@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Navbar from './components/Navbar/Navbar'
 import MBTI from './components/MBTI/MBTI'
 // import ApplyFooter from './components/footer/apply_footer'
-import { useLocation, useNavigate, Navigate } from 'react-router-dom'
+import { useLocation, useNavigate, Navigate, Link } from 'react-router-dom'
 import axios from "axios";
 import './Apply.css'
 import Stepper from "./components/Stepper/Stepper"
@@ -279,6 +279,7 @@ const Apply = () => {
                             </div>
                             <div className='resumeDesc'>
                                 <p>Upload your resume (PDF, DOC, DOCX, or TXT; maximum size 10 MB).</p>
+                                <p className="privacy-upload-note">Avoid unnecessary sensitive information. Your resume is processed for compatibility scoring and shared with authorised hiring managers. Read our <Link to="/privacy" target="_blank" rel="noopener noreferrer">Privacy Notice</Link> for AI processing and data-sharing details.</p>
                             </div>
                             <div className='uploadResume'>
                                 <div>

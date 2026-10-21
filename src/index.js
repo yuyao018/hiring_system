@@ -15,6 +15,7 @@ import Form from './recruiter/Form';
 import Managejob from './recruiter/Managejob';
 import { Edit } from './recruiter/Edit';
 import { AuthProvider, dashboardFor, useAuth } from './auth/AuthContext';
+import LegalPage, { LegalLinks } from './legal/LegalPage';
 import './candidate/index.css';
 import './recruiter/index.css';
 const cspNonce = document.querySelector('meta[name="csp-nonce"]')?.content;
@@ -31,8 +32,10 @@ function App() {
  const { pathname } = useLocation();
  const manager = children => <Protected role="hiring_manager">{children}</Protected>;
  const applicant = children => <Protected role="applicant">{children}</Protected>;
- return <div className={['/login', '/mfa', '/security', '/verify-email'].includes(pathname) ? 'auth' : pathname.startsWith('/recruiter') ? 'recruiter' : 'candidate'}><Routes>
+ return <div className={['/login', '/mfa', '/security', '/verify-email', '/terms', '/privacy'].includes(pathname) ? 'auth' : pathname.startsWith('/recruiter') ? 'recruiter' : 'candidate'}><Routes>
   <Route path="/" element={<Careers />} />
+  <Route path="/terms" element={<LegalPage type="terms" />} />
+  <Route path="/privacy" element={<LegalPage type="privacy" />} />
   <Route path="/login" element={<Login />} />
   <Route path="/verify-email" element={<ConfirmEmail />} />
   <Route path="/mfa" element={<Mfa />} />
@@ -46,6 +49,6 @@ function App() {
   <Route path="/recruiter/managejob" element={manager(<Managejob />)} />
   <Route path="/recruiter/edit/:jobId" element={manager(<Edit />)} />
   <Route path="*" element={<Navigate to="/" replace />} />
- </Routes></div>;
+ </Routes><LegalLinks /></div>;
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<CacheProvider value={emotionCache}><BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter></CacheProvider>);

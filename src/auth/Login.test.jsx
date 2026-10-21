@@ -44,8 +44,22 @@ test('registration prompts email confirmation and clears the password', async ()
  fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: 'Test applicant' } });
  fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'new@example.com' } });
  fireEvent.change(password, { target: { value: 'StrongPass12!' } });
+ fireEvent.click(screen.getByRole('checkbox', { name: /I agree/ }));
+ fireEvent.click(screen.getByRole('checkbox', { name: /I have read/ }));
  fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form'));
  expect(await screen.findByRole('status')).toHaveTextContent('Check your inbox');
  expect(screen.getByLabelText(/^Password/, { selector: 'input' })).toHaveValue('');
+ delete global.fetch;
+});
+
+test('registration requires separate terms acceptance and privacy acknowledgement', async () => {
+ global.fetch = jest.fn();
+ const password = registration();
+ fireEvent.change(password, { target: { value: 'StrongPass12!' } });
+ fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form'));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Please agree to the Terms');
+ expect(fetch).not.toHaveBeenCalled();
+ expect(screen.getByRole('link', { name: 'Terms & Conditions' })).toHaveAttribute('href', '/terms');
+ expect(screen.getByRole('link', { name: 'Privacy Notice' })).toHaveAttribute('href', '/privacy');
  delete global.fetch;
 });

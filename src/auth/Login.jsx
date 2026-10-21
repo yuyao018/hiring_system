@@ -5,6 +5,7 @@ import { readJson } from './api';
 import React, { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { dashboardFor, useAuth } from './AuthContext';
+import { termsVersion, privacyVersion } from '../legal/policyVersions';
 import './auth.css';
 export default function Login() {
  const { user, loading, refresh } = useAuth();
@@ -12,6 +13,7 @@ export default function Login() {
  const [register, setRegister] = useState(false), [name, setName] = useState(''), [email, setEmail] = useState(''), [password, setPassword] = useState('');
  const [message, setMessage] = useState(''), [busy, setBusy] = useState(false);
  const [passwordError, setPasswordError] = useState(false), [messageType, setMessageType] = useState('error');
+ const [termsAccepted, setTermsAccepted] = useState(false), [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
  const passwordIssues = register && passwordError ? getPasswordIssues(password) : [];
  const emailInvalid = register && email.length > 0 && !isValidEmail(email);
  const emailLimit = register ? INPUT_LIMITS.email : 254;
@@ -23,7 +25,8 @@ export default function Login() {
    if (register && !isValidEmail(email)) { setMessage('Enter a valid email address.'); return; }
    if (register && !isValidPassword(password)) { setPasswordError(true); return; }
    setPasswordError(false);
-   const response = await fetch(`/api/auth/${register ? 'register' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
+   if (register && (!termsAccepted || !privacyAcknowledged)) { setMessage('Please agree to the Terms & Conditions and acknowledge the Privacy Notice.'); return; }
+   const response = await fetch(`/api/auth/${register ? 'register' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, ...(register ? { termsAccepted, privacyAcknowledged, termsVersion, privacyVersion } : {}) }) });
    const data = await readJson(response);
    if (!response.ok) throw new Error(data.message || 'Unable to sign in');
    if (data.needsConfirmation) { setMessageType('info'); setMessage(data.message); setRegister(false); setPassword(''); return; }
@@ -54,6 +57,10 @@ export default function Login() {
   {passwordIssues.length > 0 && <div id="password-error" role="alert" className="auth-message auth-message-error">
    <strong>Your password is missing:</strong>
    <ul>{passwordIssues.map(issue => <li key={issue}>{issue}</li>)}</ul>
+  </div>}
+  {register && <div className="policy-consent">
+   <label><input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required /><span>I agree to the <Link to="/terms" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</Link>.</span></label>
+   <label><input type="checkbox" checked={privacyAcknowledged} onChange={e => setPrivacyAcknowledged(e.target.checked)} required /><span>I have read the <Link to="/privacy" target="_blank" rel="noopener noreferrer">Privacy Notice</Link>, including resume processing and data sharing.</span></label>
   </div>}
   {message && <div role={messageType === 'error' ? 'alert' : 'status'} className={`auth-message auth-message-${messageType}`}>{message}</div>}
   <button disabled={busy} type="submit">{busy ? 'Please wait...' : register ? 'Create account' : 'Log in'}</button>

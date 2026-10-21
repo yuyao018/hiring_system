@@ -1,5 +1,6 @@
 const { PASSWORD_REQUIREMENTS, PASSWORD_MAX_LENGTH, isValidPassword, getPasswordIssues } = require('./src/auth/passwordPolicy');
 const { isValidEmail } = require('./src/auth/emailPolicy');
+const { termsVersion, privacyVersion } = require('./src/legal/policyVersions');
 const INPUT_LIMITS = require('./src/auth/inputLimits');
 const router = require('express').Router();
 const { publicClient } = require('./lib/supabase');
@@ -38,8 +39,11 @@ router.post('/register', async (req, res) => {
  if (name.trim().length > INPUT_LIMITS.name) return res.status(400).json({ message: `Your name must be ${INPUT_LIMITS.name} characters or fewer.` });
  if (!isValidEmail(email)) return res.status(400).json({ message: 'Enter a valid email address.' });
  if (!isValidPassword(password)) return res.status(400).json({ code: 'weak_password', message: PASSWORD_REQUIREMENTS, issues: getPasswordIssues(password) });
+ if (req.body.termsAccepted !== true || req.body.privacyAcknowledged !== true || req.body.termsVersion !== termsVersion || req.body.privacyVersion !== privacyVersion) {
+  return res.status(400).json({ code: 'policy_acceptance_required', message: 'Please read and accept the current Terms & Conditions and acknowledge the Privacy Notice.' });
+ }
  // Role is assigned by the database trigger, never by signup metadata.
- const { data, error } = await publicClient().auth.signUp({ email: email.trim(), password, options: { data: { name: name.trim() } } });
+ const { data, error } = await publicClient().auth.signUp({ email: email.trim(), password, options: { data: { name: name.trim(), terms_version: termsVersion, privacy_notice_version: privacyVersion, policies_acknowledged_at: new Date().toISOString() } } });
  if (error) {
   const messages = {
    user_already_exists: 'An account with this email already exists. Please log in instead.',

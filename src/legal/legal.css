@@ -1,0 +1,26 @@
+.legal-page { min-height: 100vh; padding: 32px 20px 48px; background: #f4f7fc; color: #263b59; font-family: Poppins, Arial, sans-serif; box-sizing: border-box; }
+.legal-top { max-width: 900px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.legal-page a { color: #173e8b; text-underline-offset: 4px; }
+.legal-page .legal-brand { font-size: 30px; font-weight: 700; text-decoration: none; }
+.legal-document { max-width: 900px; margin: auto; padding: 40px; background: #fff; border: 1px solid #e1e8f3; border-radius: 18px; box-shadow: 0 8px 32px #1537600a; box-sizing: border-box; }
+.legal-eyebrow { color: #547399; font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+.legal-document h1 { margin: 12px 0; color: #142b50; font-size: clamp(26px, 5vw, 36px); }
+.legal-document header > p { color: #62748d; font-size: 13px; }
+.legal-document nav { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.legal-document nav a { padding: 10px 14px; border-radius: 8px; background: #f2f5fb; text-decoration: none; font-size: 14px; }
+.legal-document nav a[aria-current="page"] { color: #fff; background: #173e8b; }
+.legal-summary { padding: 18px 20px; border: 1px solid #d5e2f5; border-radius: 10px; background: #f5f8ff; line-height: 1.7; }
+.legal-document section { padding: 24px 0; border-bottom: 1px solid #e8edf5; }
+.legal-document h2 { margin: 0 0 10px; font-size: 18px; color: #173e8b; }
+.legal-document section p { margin: 0; line-height: 1.85; font-size: 14px; }
+.legal-related { padding-top: 24px; font-size: 14px; }
+.legal-footer { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px 24px; padding: 24px 20px; background: #f4f7fc; color: #52627a; font: 12px Poppins, Arial, sans-serif; }
+.legal-footer a { color: #173e8b; text-underline-offset: 3px; }
+.auth-card .policy-consent { padding: 16px; margin: 20px 0; background: #f5f8ff; border: 1px solid #d5e2f5; border-radius: 10px; }
+.auth-card .policy-consent label { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 12px; line-height: 1.7; }
+.auth-card .policy-consent label + label { margin-top: 12px; }
+.auth-card .policy-consent input { width: 17px; height: 17px; margin: 3px 0 0; padding: 0; flex-shrink: 0; accent-color: #173e8b; }
+.auth-card .policy-consent a { color: #173e8b; text-underline-offset: 3px; }
+.candidate .resumeDesc .privacy-upload-note { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+.privacy-upload-note a { color: #173e8b; text-decoration: underline; }
+@media (max-width: 600px) { .legal-document { padding: 24px 20px; } .legal-page { padding: 24px 14px; } }
